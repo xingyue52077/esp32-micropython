@@ -3,6 +3,8 @@ import struct  # 导入格式化字符串模块 https://blog.csdn.net/qq_3063883
 import time
 
 
+
+
 class UartError(Exception):  # 定义一个异常类 继承得是Exception类
     pass
 
@@ -39,35 +41,33 @@ class WZ_S:
 
     def read(self):  # 读取结果方法
 
-        while True:
-
+        while True:          
             # 读取一个字节判断是不是 Pms7003.START_BYTE_1 是则继续 否则从新读取
             first_byte = self.uart.read(1)
             if not self._assert_byte(first_byte, WZ_S.START_BYTE):
+                time.sleep(0.5)
                 continue
-
             # we are reading 30 bytes left
             read_bytes = self.uart.read(8)
             if len(read_bytes) < 8:
                 continue
-
             # 读取第二个字节判断是不是 Pms7003.START_BYTE_2 是则继续读取后面30个字节
-            second_byte = read_bytes[WZ_S.GAS_NAME]
+            second_byte = read_bytes[WZ_S.GAS_NAME].to_bytes(1,'big',False)
             if not self._assert_byte(second_byte, 0x17):
-                return False
+                return 
 
             checksum = ~sum(read_bytes[:7])+1
             checksum &= 0xFF  # 强制截断后八位
 
             if checksum != read_bytes[WZ_S.CHECKSUM]:  # 判断校验和
-                return False
+                return 
 
             ppb = int(read_bytes[WZ_S.MIC_HIGH]) * \
                 256+int(read_bytes[WZ_S.MIC_LOW])
 
             mic = 0.00123*ppb  # 计算浓度 mg/m3
 
-            return {'HCHO_MIC': mic}
+            return {'HCHO_MIC': f"{mic:.4f}"}
 
 
 class PassiveWZ_S(WZ_S):  # 定义被动式应答方式的类   可以用中断或者采用定时器方式来读取结果 可以省电
@@ -149,4 +149,3 @@ class PassiveWZ_S(WZ_S):  # 定义被动式应答方式的类   可以用中断�
             mic = 0.00123*ppb  # 计算浓度 mg/m3
 
             return {'HCHO_MIC': mic}
-            aaaaaaaaaaaaaaaaaaaaaaaaaaaa    aaaaaaaaaaaa       
