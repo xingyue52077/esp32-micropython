@@ -17,7 +17,7 @@ print('period:', cnc.period, 'µs')
 print(tuple(cnc.cur_pos()))
 
 start = t_ms()
-cnc.g01(360)
+cnc.g01(3600)
 print(tuple(cnc.cur_pos()))
 print(ticks_diff(t_ms(), start), 'ms')
 
